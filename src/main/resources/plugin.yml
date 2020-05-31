@@ -1,0 +1,10 @@
+name: ExamplePlugin
+version: 1.0
+main: at.warix.ExamplePlugin
+description: This project should demonstrate the programming skills of the developer. It is not to be used in a real situation.
+author: WarIX
+prefix: ExamplePlugin
+commands:
+  namemcvote:
+    description: Anything regarding this plugin
+    usage: /<command>
