@@ -1,0 +1,15 @@
+# Example Plugin - NameMC Vote Management - Configuration
+
+# MySQL connection details
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: secret
+  database: example_plugin
+
+# The hostname of the server to be voted for on NameMC
+hostname: example.com
+
+# The reward that is given per vote
+reward: 10000

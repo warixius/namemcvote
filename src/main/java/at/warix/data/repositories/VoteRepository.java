@@ -1,6 +1,7 @@
 package at.warix.data.repositories;
 
 import at.warix.data.entities.Vote;
+import at.warix.exceptions.VoteException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -16,5 +17,5 @@ public interface VoteRepository {
     List<Vote> getVotes() throws SQLException;
     Vote getVoteByUuid(UUID uuid) throws SQLException;
     Vote getVoteByPlayerName(String playerName) throws SQLException;
-    void addVote(Vote vote) throws SQLException;
+    void addVote(Vote vote) throws SQLException, VoteException;
 }

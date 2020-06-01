@@ -15,6 +15,8 @@ Any settings to the plugin can be done in the corresponding directory.
 
 ## How it works
 
+### Commands
+
 You can use the following commands within this plugin
 
 - ``/namemcvote help`` to get a help page for this plugin
@@ -25,3 +27,10 @@ You can use the following commands within this plugin
 
 It uses a database (MySQL 5.7) to save the people who have voted for the server and received a reward. 
 The config file is saved on the client, for demonstration purposes.
+
+### Permission Nodes
+
+To simplify the development, only two permission nodes are used:
+
+- ``namemcvote.user`` for all user commands
+- ``namemcvote.admin`` for the admin commands (entails also the user permissions)

@@ -1,5 +1,6 @@
 package at.warix.controllers.commands;
 
+import at.warix.ExamplePlugin;
 import at.warix.data.Database;
 import at.warix.data.NameMcAccessController;
 import at.warix.data.entities.Vote;
@@ -11,23 +12,29 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import javax.xml.ws.http.HTTPException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommandNameMcVote implements CommandExecutor {
 
     //<editor-fold desc="Field Variables">
+    private ExamplePlugin plugin;
     private final VoteRepository voteRepository;
-    private double reward = 10000;
+    private double reward;
+
+    private String prefix;
     //</editor-fold>
 
     //<editor-fold desc="Initialization">
-    public CommandNameMcVote() throws SQLException {
+    public CommandNameMcVote(ExamplePlugin plugin) throws SQLException {
         voteRepository = Database.newInstance();
+        this.plugin = plugin;
+        this.reward = plugin.getConfig().getDouble("reward");
+        this.prefix = ChatColor.GOLD + plugin.getDescription().getPrefix() + ChatColor.GRAY;
     }
     //</editor-fold>
 
@@ -43,6 +50,7 @@ public class CommandNameMcVote implements CommandExecutor {
 
 
     //<editor-fold desc="Handlers">
+
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         boolean valid = false;
         try {
@@ -75,7 +83,7 @@ public class CommandNameMcVote implements CommandExecutor {
                         String mode = args[1];
                         if (mode.equals("set")) {
                             double rewardMoney = Double.parseDouble(args[2]);
-                            setReward(rewardMoney);
+                            doSetReward(rewardMoney);
                             commandSender.sendMessage(ChatColor.RED + "The reward has been set to: " + ChatColor.GREEN + getReward());
                         } else if (mode.isEmpty() || mode.equals("get")) {
                             commandSender.sendMessage(ChatColor.RED + "The reward that is given for a vote: " + ChatColor.GREEN + getReward());
@@ -97,8 +105,12 @@ public class CommandNameMcVote implements CommandExecutor {
             commandSender.sendMessage(ChatColor.RED + "Error: Too few arguments provided!");
         } catch (NumberFormatException ex) {
             commandSender.sendMessage(ChatColor.RED + "Error: Please type in a valid number!");
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | VoteException ex) {
             commandSender.sendMessage(ChatColor.RED + "Error: " + ex.getMessage());
+        } catch (SQLException ex) {
+            commandSender.sendMessage(ChatColor.RED + "SQL Error: " + ex.getMessage());
+        } catch (HTTPException ex) {
+            commandSender.sendMessage(ChatColor.RED + "There was an error while connecting to NameMC!");
         } catch (Exception ex) {
             commandSender.sendMessage(ChatColor.RED + "Severe error! Please contact an administrator!");
             ex.printStackTrace();
@@ -111,11 +123,11 @@ public class CommandNameMcVote implements CommandExecutor {
     private void onHelp(CommandSender commandSender) {
         List<String> msgs = new ArrayList<>();
 
-        msgs.add("``/namemcvote help`` to get a help page for this plugin");
-        msgs.add("``/namemcvote vote`` If the user has not voted for the server, it will send a link, else the user is given a monetary reward, if it hasn't been given (10.000 Bucks). ");
-        msgs.add("``/namemcvote check <Name>`` To verify whether someone voted for a server.");
-        msgs.add("``/namemcvote list`` to get a list of all users who voted for a server on NameMC [Admin]");
-        msgs.add("``/namemcvote reward set <Amount>`` to set the amount to be received. [Admin]");
+        msgs.add(ChatColor.GREEN + "/namemcvote help " + ChatColor.GRAY + "- to get a help page for this plugin");
+        msgs.add(ChatColor.GREEN + "/namemcvote vote " + ChatColor.GRAY + "- If the user has not voted for the server, it will send a link, else the user is given a monetary reward, if it hasn't been given (10.000 Bucks). ");
+        msgs.add(ChatColor.GREEN + "/namemcvote check <Name> " + ChatColor.GRAY + "- To verify whether someone voted for a server.");
+        msgs.add(ChatColor.RED + "/namemcvote list " + ChatColor.GRAY + "- to get a list of all users who voted for a server on NameMC [Admin]");
+        msgs.add(ChatColor.RED + "/namemcvote reward set <Amount> " + ChatColor.GRAY + "- to set the amount to be received. [Admin]");
 
         commandSender.sendMessage(msgs.toArray(new String[0]));
     }
@@ -125,18 +137,24 @@ public class CommandNameMcVote implements CommandExecutor {
             throw new IllegalArgumentException("This command can be only executed by a player!");
         }
         Player player = (Player) commandSender;
+        commandSender.sendMessage("Your vote is being verified...");
         if (NameMcAccessController.getInstance().verifyVote(player.getUniqueId())) {
             doRegisterVote(player);
-            commandSender.sendMessage("your vote has been verified! You will earn " + reward + "...");
+            commandSender.sendMessage("Your vote has been verified! You will earn " + reward + "...");
         } else {
-            commandSender.sendMessage("You have not voted for the server!");
+            commandSender.sendMessage("Go to %s and vote for the server!");
+            commandSender.sendMessage(prefix + "");
         }
     }
 
     private void checkUserVote(CommandSender commandSender, String username) throws SQLException {
+        // to simplify the development, there are only two Perm-Nodes:
+
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("No username has been provided");
         }
+
+        // Admin
 
         commandSender.sendMessage("the vote of " + username + " is being checked...");
 
@@ -154,21 +172,27 @@ public class CommandNameMcVote implements CommandExecutor {
         commandSender.sendMessage("the list of users is being evaluated...");
 
         List<Vote> votes = voteRepository.getVotes();
-        votes.forEach(item -> commandSender.sendMessage(item.getVotedOn().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL)) + ": " + item.getPlayerName()));
+        votes.forEach(item -> commandSender.sendMessage(item.getVotedOn().format(DateTimeFormatter.ISO_DATE_TIME) + ": " + item.getPlayerName()));
         commandSender.sendMessage("the list of users is being evaluated...");
     }
     //</editor-fold>
 
 
     //<editor-fold desc="Data Access">
-
     /**
      * @param player The player to be registered
-     * @throws SQLException If there was an error registering the vote. Expected, if the user already redeemed his reward for his vote)
+     * @throws VoteException If the vote has been already registered.
+     * @throws SQLException If there was any other error registering the vote.
      */
-    private void doRegisterVote(Player player) throws SQLException {
+    private void doRegisterVote(Player player) throws SQLException, VoteException {
         Vote v = new Vote(player.getUniqueId(), player.getName());
         voteRepository.addVote(v);
+    }
+
+    private void doSetReward(double newReward) {
+        plugin.getConfig().set("reward", newReward);
+        plugin.saveConfig();
+        setReward(newReward);
     }
     //</editor-fold>
 

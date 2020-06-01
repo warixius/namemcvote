@@ -2,35 +2,26 @@ package at.warix.data;
 
 import at.warix.data.entities.Vote;
 import at.warix.data.repositories.VoteRepository;
+import at.warix.exceptions.VoteException;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class Database implements VoteRepository {
 
-    private final String HOST = "localhost";
-    private final String PORT = "3306";
-    private static final String USER = "root";
-    private static final String PASSWORD = "secret";
-    private static final String DATABASE = "example_plugin";
     private static final String VENDOR = "mysql";
     private Connection conn = null;
     private static Database db;
-    
-    private DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm");
 
     public final String getConnectionString() {
-        return "jdbc:"+ VENDOR + "://" + HOST + ":" + PORT + "/" + DATABASE;
+        return "jdbc:" + VENDOR + "://" + DatabaseConnectionDetails.getHost() + ":" + DatabaseConnectionDetails.getPort() + "/" + DatabaseConnectionDetails.getDatabase();
     }
 
     //<editor-fold defaultstate="collapsed" desc="Initialization">
     private Database() throws SQLException {
-        System.out.println(USER);
-        System.out.println(PASSWORD);
         createConnection(getConnectionString());
         setupDatabase();
     }
@@ -39,7 +30,7 @@ public class Database implements VoteRepository {
         if (conn == null) {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
         }
-        conn = DriverManager.getConnection(connectionString, USER, PASSWORD);
+        conn = DriverManager.getConnection(connectionString, DatabaseConnectionDetails.getUsername(), DatabaseConnectionDetails.getPassword());
     }
 
     private void closeConnection() throws SQLException {
@@ -89,11 +80,20 @@ public class Database implements VoteRepository {
     }
 
     @Override
-    public synchronized void addVote(Vote vote) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement(VoteRepository.SQL_INSERT_VOTE);
-        stmt.setString(1, vote.getPlayerUuid().toString());
-        stmt.setString(2, vote.getPlayerName());
-        stmt.executeUpdate();
+    public synchronized void addVote(Vote vote) throws SQLException, VoteException {
+        try {
+            PreparedStatement stmt = conn.prepareStatement(VoteRepository.SQL_INSERT_VOTE);
+            stmt.setString(1, vote.getPlayerUuid().toString());
+            stmt.setString(2, vote.getPlayerName());
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            // 23000 is the error, if a unique constraint is violated
+            if (ex.getSQLState().equals("23000")) {
+                throw new VoteException("You already have voted for the server!");
+            } else {
+                throw ex;
+            }
+        }
     }
 
     //</editor-fold>
