@@ -33,9 +33,11 @@ public class Database implements VoteRepository {
         conn = DriverManager.getConnection(connectionString, DatabaseConnectionDetails.getUsername(), DatabaseConnectionDetails.getPassword());
     }
 
-    private void closeConnection() throws SQLException {
-        conn.close();
-        conn = null;
+    public void closeConnection() throws SQLException {
+        if (conn != null && !conn.isClosed()) {
+            conn.close();
+            conn = null;
+        }
     }
 
     private void setupDatabase() throws SQLException {
@@ -89,7 +91,7 @@ public class Database implements VoteRepository {
         } catch (SQLException ex) {
             // 23000 is the error, if a unique constraint is violated
             if (ex.getSQLState().equals("23000")) {
-                throw new VoteException("You already have voted for the server!");
+                throw new VoteException("You have already voted for the server!");
             } else {
                 throw ex;
             }

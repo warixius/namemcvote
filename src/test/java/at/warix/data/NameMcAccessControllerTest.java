@@ -14,10 +14,10 @@ public class NameMcAccessControllerTest {
     public void when_hostIsSet_expect_completeURL() {
         NameMcAccessController controller = NameMcAccessController.getInstance();
         controller.setServerToVoteFor("mc.hypixel.net");
-        assertEquals(controller.getURL_ALL_USERS(), "https://api.namemc.com/server/mc.hypixel.net/likes");
+        assertEquals(controller.getUrlAllUsers(), "https://api.namemc.com/server/mc.hypixel.net/likes");
 
         controller.setServerToVoteFor("maficraft.de");
-        assertEquals(controller.getURL_ALL_USERS(), "https://api.namemc.com/server/maficraft.de/likes");
+        assertEquals(controller.getUrlAllUsers(), "https://api.namemc.com/server/maficraft.de/likes");
 
     }
 

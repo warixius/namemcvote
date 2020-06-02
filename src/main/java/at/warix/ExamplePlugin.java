@@ -20,27 +20,34 @@ public class ExamplePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            initializePlugin();
+            initializeLogger();
             initializeConnections();
             initializeCommands();
             logger.log(Level.FINE, "ExamplePlugin loaded");
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "There was an error while establishing a connection to the database!", ex);
+            getPluginLoader().disablePlugin(this);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Severe error!", ex);
+            getPluginLoader().disablePlugin(this);
         }
 
     }
 
     @Override
     public void onDisable() {
+        try {
+            uninitializeConnections();
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "There was an error while disabling the plugin", ex);
+        }
         logger.log(Level.FINE, "ExamplePlugin stopped");
     }
 
     //</editor-fold>
 
     //<editor-fold desc="Initialization">
-    private void initializePlugin() {
+    private void initializeLogger() {
         logger = getLogger();
         initializeConfigurations();
     }
@@ -59,11 +66,11 @@ public class ExamplePlugin extends JavaPlugin {
         // Creates Database and Tables, if none
         // throws an error, if it was unsuccessful
 
-        String username = (getConfig().getString("mysql.username"));
-        String password = (getConfig().getString("mysql.password"));
-        String host = (getConfig().getString("mysql.host"));
-        String port = (getConfig().getString("mysql.port"));
-        String database = (getConfig().getString("mysql.database"));
+        String username = getConfig().getString("mysql.username");
+        String password = getConfig().getString("mysql.password");
+        String host = getConfig().getString("mysql.host");
+        String port = getConfig().getString("mysql.port");
+        String database = getConfig().getString("mysql.database");
 
         DatabaseConnectionDetails.writeConnectionDetails(host, port, database, username, password);
 
@@ -73,5 +80,7 @@ public class ExamplePlugin extends JavaPlugin {
 
     //</editor-fold>
 
-
+    private void uninitializeConnections() throws SQLException {
+        Database.newInstance().closeConnection();
+    }
 }

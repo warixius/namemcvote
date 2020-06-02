@@ -3,9 +3,18 @@ version: 1.0
 main: at.warix.ExamplePlugin
 description: This project should demonstrate the programming skills of the developer. It is not to be used in a real situation.
 author: WarIX
-prefix: ExamplePlugin
+prefix: NameMCVote
 commands:
   namemcvote:
     description: Anything regarding this plugin
     usage: /<command>
     aliases: [nmcv]
+permissions:
+  namemcvote.user:
+    description: Access to normal commands (voting, reward redemption, ...)
+    default: not op
+  namemcvote.admin:
+    description: Access to Admin commands (listing, reward management)
+    default: op
+    children:
+      namemcvote.user: true

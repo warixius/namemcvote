@@ -12,6 +12,7 @@ import java.util.UUID;
 public class NameMcAccessController {
     private final String URL_ALL_USERS = "https://api.namemc.com/server/%s/likes";
     private final String URL_HAS_USER_VOTED = "https://api.namemc.com/server/%s/likes?profile=%s";
+    private final String linkToNameMcVotePage = "https://namemc.com/server/%s";
 
     private String serverToVoteFor;
 
@@ -35,8 +36,12 @@ public class NameMcAccessController {
         this.serverToVoteFor = serverToVoteFor;
     }
 
-    public String getURL_ALL_USERS() {
+    public String getUrlAllUsers() {
         return String.format(URL_ALL_USERS, serverToVoteFor);
+    }
+
+    public String getLinkToNameMcVotePage() {
+        return String.format(linkToNameMcVotePage, serverToVoteFor);
     }
 
     public boolean verifyVote(UUID uuid) throws IOException {
