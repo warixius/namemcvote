@@ -1,5 +1,6 @@
 package at.warix.data;
 
+import at.warix.exceptions.HTTPException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class NameMcAccessControllerTest {
     }
 
     @Test
-    public void given_UserHasNotVotedForServer_when_voteIsChecked_expect_false() throws IOException {
+    public void given_UserHasNotVotedForServer_when_voteIsChecked_expect_false() throws IOException, HTTPException {
         UUID uuidOfGoose = UUID.fromString("d0883ade-188c-403c-acd2-bf42a9b70314");
 
         NameMcAccessController controller = NameMcAccessController.getInstance();
@@ -31,7 +32,7 @@ public class NameMcAccessControllerTest {
     }
 
     @Test
-    public void given_UserHasVotedForServer_when_voteIsChecked_expect_true() throws IOException {
+    public void given_UserHasVotedForServer_when_voteIsChecked_expect_true() throws IOException, HTTPException {
         UUID uuidOfDuck = UUID.fromString("7335455f-587d-4129-b9be-a8473a65ce14");
 
         NameMcAccessController controller = NameMcAccessController.getInstance();

@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>at.warix</groupId>
-    <artifactId>example-plugin-maven</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>namemcvote</artifactId>
+    <version>0.1.0</version>
     <build>
         <plugins>
             <plugin>

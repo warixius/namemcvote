@@ -17,7 +17,7 @@ public class Database implements VoteRepository {
     private static Database db;
 
     public final String getConnectionString() {
-        return "jdbc:" + VENDOR + "://" + DatabaseConnectionDetails.getHost() + ":" + DatabaseConnectionDetails.getPort() + "/" + DatabaseConnectionDetails.getDatabase();
+        return "jdbc:" + VENDOR + "://" + DatabaseConnectionDetails.getHost() + ":" + DatabaseConnectionDetails.getPort() + "/" + DatabaseConnectionDetails.getDatabase() + "?useSSL=false";
     }
 
     //<editor-fold defaultstate="collapsed" desc="Initialization">
@@ -36,7 +36,6 @@ public class Database implements VoteRepository {
     public void closeConnection() throws SQLException {
         if (conn != null && !conn.isClosed()) {
             conn.close();
-            conn = null;
         }
     }
 

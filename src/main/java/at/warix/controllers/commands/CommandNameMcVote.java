@@ -5,6 +5,7 @@ import at.warix.data.Database;
 import at.warix.data.NameMcAccessController;
 import at.warix.data.entities.Vote;
 import at.warix.data.repositories.VoteRepository;
+import at.warix.exceptions.HTTPException;
 import at.warix.exceptions.PermissionException;
 import at.warix.exceptions.VoteException;
 import org.bukkit.ChatColor;
@@ -13,7 +14,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import javax.xml.ws.http.HTTPException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
@@ -140,7 +140,7 @@ public class CommandNameMcVote implements CommandExecutor {
         commandSender.sendMessage(msgs.toArray(new String[0]));
     }
 
-    private void onVote(CommandSender commandSender) throws SQLException, IOException, VoteException {
+    private void onVote(CommandSender commandSender) throws SQLException, IOException, VoteException, at.warix.exceptions.HTTPException {
         if (!(commandSender instanceof Player)) {
             throw new IllegalArgumentException("This command can be only executed by a player!");
         }
